@@ -812,6 +812,11 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         require(_checkOnERC721Received(address(0), to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
+        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
+        _tokenURIs[tokenId] = _tokenURI;
+    }
+
     /**
      * @dev Mints `tokenId` and transfers it to `to`.
      *
@@ -1752,6 +1757,12 @@ contract ASSET is ERC721, AccessControlEnumerable {
 
             return result;
         }
+    }
+    
+    function mintWithURI(address to, uint256 tokenId, string memory uri) external {
+        require(!_exists(tokenId), "token id already exist");
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
     }
     
 }
