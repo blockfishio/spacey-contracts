@@ -437,7 +437,7 @@ interface ERC721Verifiable is ERC721Interface {
 
 
 contract MarketplaceStorage {
-  ERC20Interface public immutable acceptedToken;
+  ERC20Interface public acceptedToken;
 
   struct Order {
     // Order ID
