@@ -457,6 +457,7 @@ contract MarketplaceStorage {
 
   uint256 public ownerCutPerMillion;
   uint256 public publicationFeeInWei;
+  uint256 public transactionFeePerMillion;
 
   bytes4 public constant InterfaceId_ValidateFingerprint = bytes4(
     keccak256("verifyFingerprint(uint256,bytes)")
@@ -489,6 +490,8 @@ contract MarketplaceStorage {
   );
 
   event ChangedPublicationFee(uint256 publicationFee);
+  event ChangedTransactionFeePerMillion(uint256 transactionFeePerMillion);
+
   event ChangedOwnerCutPerMillion(uint256 ownerCutPerMillion);
 
   event SpayMining(
@@ -908,6 +911,12 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     emit ChangedPublicationFee(publicationFeeInWei);
   }
 
+  function setTransactionFeePerMillion(uint256 _transactionFeePerMillion) external onlyOwner {
+    require(_transactionFeePerMillion < 1000000, "The transaction fee should be between 0 and 999,999");
+    transactionFeePerMillion = _transactionFeePerMillion;
+    emit ChangedTransactionFeePerMillion(transactionFeePerMillion);
+  }
+
   /**
     * @dev Sets the share cut for the owner of the contract that's
     *  charged to the seller on a successful sale
@@ -1152,7 +1161,38 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
         price,
         mineShareAmount
       );
+      // now use mineShareAmount as transactionFee
+      mineShareAmount=0;
     }
+
+    if (transactionFeePerMillion >0 && seller != sellerAddress){
+        mineShareAmount=price.mul(transactionFeePerMillion).div(1000000);
+
+        //Transfer transaction fee amount to owner
+        require(
+            acceptedToken.transferFrom(sender, owner(), mineShareAmount),
+            "Transfering the sale amount to the owner failed"
+        );
+        price-=mineShareAmount;
+
+        //now use mineShareAmount as mineShareAmount
+        mineShareAmount = mineShareAmount.mul(ownerCutPerMillion).div(1000000);
+        emit SpayMining(
+          orderId,
+          assetId,
+          seller,
+          sender,
+          nftAddress,
+          price,
+          mineShareAmount
+        );
+    }
+
+    // Transfer sale amount to seller
+    require(
+      acceptedToken.transferFrom(sender, seller, price),
+      "Transfering the sale amount to the seller failed"
+    );
 
     // Transfer asset owner
     nftRegistry.safeTransferFrom(
