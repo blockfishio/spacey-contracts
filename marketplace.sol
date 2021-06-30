@@ -437,8 +437,12 @@ interface ERC721Verifiable is ERC721Interface {
 
 
 contract MarketplaceStorage {
-  ERC20Interface public acceptedToken;
-
+  using Address for address;
+  ERC20Interface public immutable acceptedToken;
+  constructor(address _acceptedToken){
+    require(_acceptedToken.isContract(), "The accepted token address must be a deployed contract");
+    acceptedToken = ERC20Interface(_acceptedToken);
+  }
   struct Order {
     // Order ID
     bytes32 id;
@@ -884,7 +888,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     uint256 _ownerCutPerMillion,
     address _owner,
     address _seller
-  )
+  )  MarketplaceStorage( _acceptedToken)
   {
     // EIP712 init
     _initializeEIP712('SpaceY Marketplace', '1');
@@ -895,8 +899,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     require(_owner != address(0), "Invalid owner");
     transferOwnership(_owner);
 
-    require(_acceptedToken.isContract(), "The accepted token address must be a deployed contract");
-    acceptedToken = ERC20Interface(_acceptedToken);
+   
 
     require(_seller != address(0), "Invalid seller");
     sellerAddress = _seller;
