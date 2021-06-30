@@ -2,7 +2,7 @@
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.7.6;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -217,7 +217,7 @@ library SafeMath {
 
 // File: @openzeppelin/contracts/utils/Address.sol
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity ^0.7.6;
 
 /**
  * @dev Collection of functions related to the address type
@@ -437,7 +437,7 @@ interface ERC721Verifiable is ERC721Interface {
 
 
 contract MarketplaceStorage {
-  ERC20Interface public acceptedToken;
+  ERC20Interface public immutable acceptedToken;
 
   struct Order {
     // Order ID
@@ -534,7 +534,7 @@ contract ContextMixin {
 
 // File: contracts/commons/Ownable.sol
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.7.6;
 
 
 /**
@@ -585,7 +585,7 @@ abstract contract Ownable is ContextMixin {
      * NOTE: Renouncing ownership will leave the contract without an owner,
      * thereby removing any functionality that is only available to the owner.
      */
-    function renounceOwnership() public virtual onlyOwner {
+    function renounceOwnership() external virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
     }
@@ -603,7 +603,7 @@ abstract contract Ownable is ContextMixin {
 
 // File: contracts/commons/Pausable.sol
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.7.6;
 
 
 /**
@@ -793,7 +793,7 @@ contract NativeMetaTransaction is EIP712Base {
         bytes32 sigR,
         bytes32 sigS,
         uint8 sigV
-    ) public payable returns (bytes memory) {
+    ) external payable returns (bytes memory) {
         MetaTransaction memory metaTx = MetaTransaction({
             nonce: nonces[userAddress],
             from: userAddress,
@@ -839,7 +839,7 @@ contract NativeMetaTransaction is EIP712Base {
             );
     }
 
-    function getNonce(address user) public view returns (uint256 nonce) {
+    function getNonce(address user) external view returns (uint256 nonce) {
         nonce = nonces[user];
     }
 
@@ -871,7 +871,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
   using SafeMath for uint256;
   using Address for address;
 
-  address sellerAddress;
+  address immutable sellerAddress;
 
   /**
     * @dev Initialize this contract. Acts as a constructor
@@ -898,6 +898,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     require(_acceptedToken.isContract(), "The accepted token address must be a deployed contract");
     acceptedToken = ERC20Interface(_acceptedToken);
 
+    require(_seller != address(0), "Invalid seller");
     sellerAddress = _seller;
   }
 
@@ -942,7 +943,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     uint256 priceInWei,
     uint256 expiresAt
   )
-    public
+    external
     whenNotPaused
   {
     _createOrder(
@@ -959,7 +960,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     * @param nftAddress - Address of the NFT registry
     * @param assetId - ID of the published NFT
     */
-  function cancelOrder(address nftAddress, uint256 assetId) public whenNotPaused {
+  function cancelOrder(address nftAddress, uint256 assetId) external whenNotPaused {
     _cancelOrder(nftAddress, assetId);
   }
 
@@ -976,7 +977,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     uint256 price,
     bytes memory fingerprint
   )
-   public
+   external
    whenNotPaused
   {
     _executeOrder(
@@ -998,7 +999,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
     uint256 assetId,
     uint256 price
   )
-   public
+   external
    whenNotPaused
   {
     _executeOrder(
