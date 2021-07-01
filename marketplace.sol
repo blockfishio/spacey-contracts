@@ -1165,8 +1165,7 @@ contract Marketplace is Ownable, Pausable, MarketplaceStorage, NativeMetaTransac
         price,
         mineShareAmount
       );
-      // now use mineShareAmount as transactionFee
-      mineShareAmount=0;
+      
     }
 
     if (transactionFeePerMillion >0 && seller != sellerAddress){
